@@ -1,66 +1,61 @@
 # Event-Driven Market Replay & Backtester
 
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+A lightweight, reproducible backtesting engine built in Python. 
 
-A lightweight, reproducible, and fully containerized market backtester and replay tool. 
-
-Built with Python and Docker, this tool uses an event-driven architecture to process historical data, ensuring your strategies are tested without look-ahead bias. 
+This tool uses an event-driven architecture to process historical data bar-by-bar. It enforces **next-bar execution** (the strategy decides on bar `T`, but the broker fills at the open of bar `T+1`) to prevent look-ahead bias. 
 
 ## Quick Start
 
-To install Docker, use [Docker](https://docs.docker.com/get-docker/).
+To install docker, use [Docker](https://docs.docker.com/get-docker/).
 
 1. **Clone the repository:**
+   ```bash
    git clone https://github.com/leopitner/market-replay-backtester.git
    cd market-replay-backtester
+   ```
 
 2. **Run the sample backtest:**
+   ```bash
    docker compose run --rm backtester
+   ```
 
-3. **View results:**
-   Check the `results/` folder on your local machine. You will find `summary.json` (Sharpe ratio, trades, final equity) and `equity.parquet` (a timeline of your portfolio value).
+## Outputs
+
+Every run generates three files in the local `results/` folder:
+
+- **`summary.json`**: Performance metrics (final equity, annualized Sharpe ratio, max drawdown, total trades).
+- **`ledger.csv`**: A complete execution ledger containing decision time, execution time, side, quantity, fill price, transaction costs, remaining cash, and resulting position.
+- **`manifest.json`**: A reproducibility manifest capturing the exact git revision, strategy configuration, data checksum (SHA-256), and software versions used for the run.
 
 ## Using Your Own Data
 
 To run a backtest on your own data:
-1. Place your CSV file in the `data/` folder.
-2. Ensure your CSV has the following columns (order doesn't matter):
+1. Place your CSV file in the local `data/` folder.
+2. Ensure your CSV has the following columns:
    `timestamp, open, high, low, close, volume`
 3. Run the container, pointing to your file:
+   ```bash
    docker compose run --rm backtester backtest --config /app/config/example.yaml --data /app/data/my_data.csv
-
-## Writing a Custom Strategy
-
-Strategies inherit from a simple base class. Check out `app/strategy/examples/ma_cross.py` for an example. 
-
-Here is the basic template:
-
-class MyStrategy(Strategy):
-    def __init__(self, param1=10, **kwargs):
-        super().__init__(**kwargs)
-        self.param1 = int(param1)
-
-    def on_bar(self, bar) -> int:
-        # bar is a pandas Series with open, high, low, close, volume
-        # Return 1 (Buy), -1 (Sell), or 0 (Do nothing)
-        if bar["close"] > 100:
-            return 1
-        return 0
-
-To run your strategy, update `config/example.yaml` and `app/main.py` to point to your new class.
-
-## Architecture & Design
-
-This project uses a strict event-driven architecture to ensure realism. For a deep dive into how the Event Loop, Simulated Broker, and Data Feed interact, see [DESIGN.md](DESIGN.md).
+   ```
 
 ## Running Tests Locally
 
-If you want to develop locally without Docker:
+The test suite validates the execution logic against hand-calculated fixtures (proving next-bar fills, slippage, and ledger math) without needing Docker.
+
+```bash
+# Set up local environment
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
-pytest
 
-## License
+# Run tests
+python -m pytest
+```
 
-Distributed under the MIT License. See `LICENSE` for more information.
+## Roadmap (Not Yet Implemented)
+
+- [ ] MySQL-backed experiment history.
+- [ ] Interactive market replay mode (pacing data in real-time).
+- [ ] Multi-asset portfolio support.
