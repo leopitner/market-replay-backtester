@@ -1,0 +1,9 @@
+services:
+  backtester:
+    build: .
+    image: backtester:dev
+    volumes:
+      - ./data:/app/data:ro
+      - ./config:/app/config:ro
+      - ./results:/app/results
+    command: ["backtest", "--config", "/app/config/example.yaml", "--data", "/app/data/sample.csv"]
