@@ -1,5 +1,3 @@
-import pandas as pd
-
 class SimulatedBroker:
     def __init__(self, initial_cash=100_000, slippage_bps=5, commission=0.0):
         self.cash = initial_cash
@@ -14,12 +12,14 @@ class SimulatedBroker:
             return
 
         side = 1 if delta > 0 else -1
+        
         fill_price = price * (1 + side * self.slippage_bps / 10_000)
         
-        trade_value = abs(delta) * fill_price
-        costs = abs(delta) * self.commission + (trade_value * self.slippage_bps / 10_000)
+        fees = abs(delta) * self.commission
         
-        self.cash -= (delta * fill_price) + costs
+        slippage_cost = abs(delta) * abs(fill_price - price)
+        
+        self.cash -= (delta * fill_price) + fees
         self.position = target_qty
 
         self.ledger.append({
@@ -27,8 +27,10 @@ class SimulatedBroker:
             "execution_time": execution_time,
             "side": "BUY" if side == 1 else "SELL",
             "quantity": abs(delta),
-            "price": fill_price,
-            "costs": costs,
+            "reference_price": price,
+            "fill_price": fill_price,
+            "slippage_cost": slippage_cost,
+            "fees": fees,
             "cash": self.cash,
             "position": self.position
         })
