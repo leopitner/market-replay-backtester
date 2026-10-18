@@ -6,7 +6,7 @@ This engine uses an event-driven architecture to process historical data strictl
 
 ## Quick Start
 
-To install Docker, use [Docker](https://docs.docker.com/get-docker/).
+To install Docker, look at [Docker](https://docs.docker.com/get-docker/).
 
 1. **Clone the repository:**
    ```bash
